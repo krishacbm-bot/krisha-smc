@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>School SMC Finder</title>
+<style>
+:root{--bg:#f4f6f3;--card:#fff;--ink:#17261f;--muted:#5d6b64;--line:#d9e0db;--accent:#1d5a42;--on:#fff;--mark:#f0b43c;--bad:#a4332b}
+@media(prefers-color-scheme:dark){:root{--bg:#101a15;--card:#18251e;--ink:#e7efe9;--muted:#9bada3;--line:#2c3d34;--accent:#6fd0a0;--on:#0b1711;--bad:#ff8f84}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Segoe UI",system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:32px 20px 64px}
+h1{font-size:clamp(28px,5vw,40px);line-height:1.1;margin:0 0 8px;letter-spacing:-.01em}
+h2{font-size:19px;margin:0 0 10px}
+.lead{color:var(--muted);margin:0 0 22px;max-width:62ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:18px}
+label{display:block;font-weight:600;font-size:14px;margin:0 0 4px}
+input[type=text],input[type=password],input[type=file]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:7px;font:15px inherit;background:var(--bg);color:var(--ink)}
+textarea{width:100%;font:12px/1.4 Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink)}
+input:focus-visible,button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.seg button{border:0;background:none;color:var(--ink);padding:9px 16px;font:600 15px inherit;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--on)}
+.field{margin:0 0 12px}
+.chk{display:flex;gap:8px;align-items:center;font-weight:400;margin:0 0 6px}.chk input{width:auto}
+.hint{color:var(--muted);font-size:14px;margin:4px 0 0}
+.btn{display:inline-block;background:var(--accent);color:var(--on);border:0;border-radius:8px;padding:11px 22px;font:600 16px inherit;text-decoration:none;cursor:pointer}
+.btn.alt{background:none;color:var(--accent);border:2px solid var(--accent)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn:disabled{opacity:.55;cursor:wait}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.err{color:var(--bad);font-weight:600;margin:12px 0 0}
+progress{width:100%;height:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:0 0 14px}
+.stat{border-left:4px solid var(--mark);padding:2px 12px}.stat b{display:block;font-size:26px;line-height:1.1}.stat span{color:var(--muted);font-size:13px}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:820px}
+th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--line);font-size:14px}
+th{color:var(--muted);font-size:13px;white-space:nowrap}
+td a{color:var(--accent);overflow-wrap:anywhere}
+ol{margin:0 0 10px;padding-left:22px}li{margin:0 0 4px}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--mark);color:#2b2000}.tag.ok{background:var(--accent);color:var(--on)}
+details summary{cursor:pointer;font-weight:600}
+[hidden]{display:none!important}
+</style></head><body><main>
+<h1>School SMC Finder</h1>
+<p class="lead">Finds each school's website (from the official CBSE record), its School Management Committee (SMC) page, the members it lists and the SMC PDF files. Download everything as Excel, and save the PDFs into a folder you choose.</p>
+
+<section class="card" aria-labelledby="h1a">
+  <h2 id="h1a">Step 1 - Get the school list (only if you don't have an Excel yet)</h2>
+  <details>
+    <summary>Show me how</summary>
+    <ol style="margin-top:10px">
+      <li>Open the school list in Chrome or Edge, e.g. <a href="https://www.schoolsindia.net/cbse-schools-in-mumbai/district" target="_blank" rel="noopener">the Mumbai CBSE list</a>.</li>
+      <li>Press <b>F12</b> and click the <b>Console</b> tab.</li>
+      <li>Click <b>Copy the code</b> below, paste it into the console and press <b>Enter</b>. (If Chrome asks, type <code>allow pasting</code> first.)</li>
+      <li>Wait. It clicks through every page by itself. Then <b>schools.csv</b> downloads. Use that file in Step 2.</li>
+    </ol>
+    <textarea id="snip" rows="7" readonly aria-label="Code to paste in the console"></textarea>
+    <p><button class="btn alt sm" id="copy">Copy the code</button></p>
+    <p class="hint">This runs in your own browser, on that site's page, so nothing is sent to us. Check the site's Terms before collecting its list.</p>
+  </details>
+</section>
+
+<section class="card" aria-labelledby="h2a">
+  <h2 id="h2a">Step 2 - Find websites, SMC pages and PDFs</h2>
+  <div class="field" id="codebox"><label for="code">Access code (if one was given to you)</label>
+    <input id="code" type="password" autocomplete="current-password"></div>
+  <div class="seg" role="group" aria-label="Input">
+    <button id="m-file" aria-pressed="true">Excel / CSV list</button>
+    <button id="m-url" aria-pressed="false">One website link</button>
+  </div>
+  <div id="p-file" class="field"><label for="file">Excel or CSV file</label>
+    <input id="file" type="file" accept=".xlsx,.xls,.csv">
+    <p class="hint">Needs a <b>School Name</b> column. Add <b>Affiliation No.</b> to get websites from the CBSE record, or a <b>Website</b> column if you already have them. Other columns (address, district ...) are kept.</p></div>
+  <div id="p-url" hidden>
+    <div class="field"><label for="siteurl">School website link</label><input id="siteurl" type="text" placeholder="https://www.myschool.edu.in"></div>
+    <div class="field"><label for="sitename">School name (optional)</label><input id="sitename" type="text"></div>
+  </div>
+  <label class="chk"><input type="checkbox" id="optcbse" checked> Get missing websites from the official CBSE record (uses Affiliation No.)</label>
+  <label class="chk"><input type="checkbox" id="optsmc" checked> Find the SMC page, members and PDFs on each school's website</label>
+  <p class="row" style="margin:14px 0 0"><button class="btn" id="go">Start</button><button class="btn alt" id="stop" hidden>Stop</button></p>
+  <p class="err" id="err" hidden></p>
+  <div id="prog" hidden style="margin-top:14px"><progress id="bar" value="0" max="1"></progress><div id="pmsg" class="hint" aria-live="polite"></div></div>
+</section>
+
+<section class="card" id="res" hidden aria-labelledby="h3a">
+  <h2 id="h3a">Results</h2>
+  <div class="stats">
+    <div class="stat"><b id="s-n">0</b><span>Schools</span></div>
+    <div class="stat"><b id="s-site">0</b><span>With a website</span></div>
+    <div class="stat"><b id="s-smc">0</b><span>With an SMC page</span></div>
+    <div class="stat"><b id="s-pdf">0</b><span>SMC PDF files</span></div>
+  </div>
+  <p class="row">
+    <button class="btn" id="xl">Download Excel</button>
+    <button class="btn" id="savedir" hidden>Save all PDFs to a folder...</button>
+    <button class="btn alt" id="zipbtn">Download all PDFs (zip)</button>
+  </p>
+  <div id="sv" hidden><progress id="sv-bar" value="0" max="1"></progress><div class="hint" id="sv-msg" aria-live="polite"></div></div>
+  <div class="scroll" style="margin-top:14px"><table><thead><tr><th>#</th><th>School</th><th>Website</th><th>SMC page(s)</th><th>PDFs</th><th>Status</th></tr></thead><tbody id="tb"></tbody></table></div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+
+/* ---------- Step 1 snippet (runs in the school-list page, in the user's own browser) ---------- */
+const SNIP = String.raw`(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const lab = (t, l) => { const m = t.match(new RegExp(l + '\\s*:?\\s*\\n*\\s*([^\\n]+)', 'i')); return m ? m[1].trim() : ''; };
+  const grab = () => [...document.querySelectorAll('h3')].map(h => {
+    let c = h;
+    while (c.parentElement && c.parentElement.querySelectorAll('h3').length === 1) c = c.parentElement;
+    return { n: h.innerText.trim(), t: c.innerText };
+  }).filter(c => /District/.test(c.t) && /Affiliation/i.test(c.t)).map(c => {
+    let a = lab(c.t, 'Address');
+    if (!a) {
+      const L = c.t.split('\n').map(s => s.trim()).filter(Boolean), i = L.indexOf(c.n);
+      if (i >= 0 && L[i + 1] && !/^(Classes|Board|Affiliation|School code|District|State)\b/i.test(L[i + 1])) a = L[i + 1];
+    }
+    return [c.n, a, lab(c.t, 'Board'), lab(c.t, 'Affiliation(?: Number)?'), lab(c.t, 'School code'), lab(c.t, 'District'), lab(c.t, 'State')];
+  });
+  const rows = [], seen = new Set(); let page = 1;
+  while (page < 1000) {
+    let data = grab(), sig = JSON.stringify(data.map(r => r[0] + r[3]));
+    if (seen.has(sig)) { await sleep(2500); data = grab(); sig = JSON.stringify(data.map(r => r[0] + r[3])); }
+    if (!data.length || seen.has(sig)) break;
+    seen.add(sig); rows.push(...data);
+    console.log('Page ' + page + ' done - ' + rows.length + ' schools so far');
+    const btns = document.querySelectorAll("button.page-arrow[aria-label='Next page']");
+    const next = btns[btns.length - 1];
+    if (!next || next.disabled) break;
+    next.click(); await sleep(2500); page++;
+  }
+  const uniq = [...new Map(rows.map(r => [r[0] + '|' + r[3] + '|' + r[4], r])).values()];
+  const esc = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const head = ['School Name', 'Address', 'Board', 'Affiliation No.', 'School Code', 'District', 'State'];
+  const csv = '\ufeff' + [head].concat(uniq).map(r => r.map(esc).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'schools.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  console.log('Finished: ' + uniq.length + ' schools saved in schools.csv');
+})();`;
+$("snip").value = SNIP;
+$("copy").onclick = async () => {
+  try { await navigator.clipboard.writeText(SNIP); } catch { $("snip").select(); document.execCommand("copy"); }
+  $("copy").textContent = "Copied!"; setTimeout(() => $("copy").textContent = "Copy the code", 2000);
+};
+
+/* ---------- helpers ---------- */
+let mode = "file", stopFlag = false, results = [], headers = [], busy = false;
+const isWeb = h => /website|^url$|^site$|^web$|^link$/i.test(h);
+const safe = (s, n = 60) => String(s || "").replace(/[\\/:*?"<>|\r\n\t]+/g, "_").replace(/^[ .]+|[ .]+$/g, "").slice(0, n) || "school";
+const affKey = a => String(a || "").split(".")[0].replace(/\D/g, "");
+const el = (tag, attrs = {}, text) => { const e = document.createElement(tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; };
+const showErr = m => { $("err").textContent = m; $("err").hidden = !m; };
+function setMode(m) {
+  mode = m;
+  $("m-file").setAttribute("aria-pressed", m === "file"); $("m-url").setAttribute("aria-pressed", m === "url");
+  $("p-file").hidden = m !== "file"; $("p-url").hidden = m !== "url";
+}
+$("m-file").onclick = () => setMode("file"); $("m-url").onclick = () => setMode("url");
+
+async function api(path, payload) {
+  const r = await fetch("/api/" + path, { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code: $("code").value, ...payload }) });
+  if (r.status === 401) throw new Error("Wrong access code.");
+  return r;
+}
+async function apiJson(path, payload) {
+  const r = await api(path, payload);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || "Error " + r.status);
+  return j;
+}
+async function pool(items, n, fn) {
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
+    while (i < items.length && !stopFlag) { const it = items[i++]; await fn(it); }
+  }));
+}
+async function readRows(file) {
+  const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
+  return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "", raw: false });
+}
+function toSchools(rows) {
+  headers = Object.keys(rows[0] || {});
+  const low = headers.map(h => h.toLowerCase());
+  const f = fn => { const i = low.findIndex(fn); return i < 0 ? null : headers[i]; };
+  const c = { name: f(h => h.includes("school") && h.includes("name")) || f(h => h.includes("name")) || headers[0],
+              web: f(h => isWeb(h)), aff: f(h => h.includes("affiliation")) };
+  return rows.map(r => ({ name: String(r[c.name] || "").trim(), website: c.web ? String(r[c.web] || "").trim() : "",
+    aff: c.aff ? String(r[c.aff] || "").trim() : "", extra: r })).filter(s => s.name);
+}
+
+/* ---------- table ---------- */
+let drawTimer = null;
+const draw = () => { clearTimeout(drawTimer); drawTimer = setTimeout(drawNow, 250); };
+function drawNow() {
+  $("s-n").textContent = results.length;
+  $("s-site").textContent = results.filter(r => r.website).length;
+  $("s-smc").textContent = results.filter(r => r.smc_pages.length).length;
+  $("s-pdf").textContent = results.reduce((a, r) => a + r.pdfs.length, 0);
+  const tb = $("tb"); tb.replaceChildren();
+  results.forEach((r, i) => {
+    const tr = el("tr");
+    const w = el("td"); if (r.website) w.append(el("a", { href: r.website, target: "_blank", rel: "noopener" }, r.website));
+    const p = el("td"); r.smc_pages.forEach((x, k) => { p.append(el("a", { href: x.url, target: "_blank", rel: "noopener" }, "Page " + (k + 1)), el("br")); });
+    if (r.members.length) p.append(el("small", {}, r.members.length + " member(s) listed"));
+    const f = el("td"); r.pdfs.forEach(x => { f.append(el("a", { href: x.url, target: "_blank", rel: "noopener" }, (x.title || "PDF").slice(0, 45)), el("br")); });
+    const s = el("td"); s.append(el("span", { class: "tag" + (r.smc_pages.length || r.pdfs.length ? " ok" : "") }, r.status));
+    if (r.note) s.append(el("br"), el("small", {}, r.note));
+    tr.append(el("td", {}, i + 1), el("td", {}, r.name), w, p, f, s); tb.append(tr);
+  });
+}
+
+/* ---------- run ---------- */
+$("stop").onclick = () => { stopFlag = true; $("pmsg").textContent = "Stopping after the current schools ..."; };
+$("go").onclick = async () => {
+  if (busy) return;
+  showErr(""); stopFlag = false;
+  let schools;
+  try {
+    if (mode === "file") {
+      const f = $("file").files[0];
+      if (!f) throw new Error("Choose your Excel or CSV file first.");
+      const rows = await readRows(f);
+      schools = rows.length ? toSchools(rows) : [];
+      if (!schools.length) throw new Error("No schools found. The file needs a 'School Name' column.");
+    } else {
+      let u = $("siteurl").value.trim();
+      if (!u) throw new Error("Paste the school website link first.");
+      if (!/^https?:\/\//i.test(u)) u = "http://" + u;
+      let host; try { host = new URL(u).hostname; } catch { throw new Error("That is not a valid link."); }
+      const nm = $("sitename").value.trim() || host;
+      headers = ["School Name"]; schools = [{ name: nm, website: u, aff: "", extra: { "School Name": nm } }];
+    }
+  } catch (e) { showErr(e.message); return; }
+
+  busy = true; $("go").disabled = true; $("stop").hidden = false; $("prog").hidden = false;
+  results = schools.map(s => ({ ...s, status: "Waiting", note: s.website ? (mode === "file" ? "From your file" : "Link you gave") : "", smc_pages: [], members: [], pdfs: [] }));
+  $("res").hidden = false; drawNow();
+  try {
+    if ($("optcbse").checked) {                                   // websites from the official CBSE record
+      const need = results.filter(r => !r.website && affKey(r.aff));
+      results.filter(r => !r.website && !affKey(r.aff)).forEach(r => { r.note = "No affiliation number"; });
+      for (let i = 0; i < need.length && !stopFlag; i += 20) {
+        const part = need.slice(i, i + 20);
+        $("bar").max = Math.max(need.length, 1); $("bar").value = i;
+        $("pmsg").textContent = "Reading CBSE records ... " + i + " of " + need.length;
+        try {
+          const j = await apiJson("cbse", { affs: part.map(r => affKey(r.aff)) });
+          part.forEach(r => { const x = j.results[affKey(r.aff)]; if (x) { r.website = x.website; r.note = x.note; } });
+        } catch (e) { if (/access code/i.test(e.message)) throw e; part.forEach(r => { r.note = "CBSE lookup failed"; }); }
+        draw();
+      }
+    }
+    results.forEach(r => { r.status = r.website ? "Website found" : "No website found"; });
+    drawNow();
+    if ($("optsmc").checked) {                                    // SMC page, members, PDFs
+      const todo = results.filter(r => r.website); let done = 0;
+      $("bar").max = Math.max(todo.length, 1); $("bar").value = 0;
+      await pool(todo, 4, async r => {
+        r.status = "Checking ...";
+        try {
+          const j = await apiJson("crawl", { url: r.website });
+          Object.assign(r, { status: j.status, website: j.website || r.website, smc_pages: j.smc_pages, members: j.members, pdfs: j.pdfs });
+        } catch (e) { if (/access code/i.test(e.message)) { stopFlag = true; showErr(e.message); } r.status = "Error: " + e.message; }
+        done++; $("bar").value = done; $("pmsg").textContent = "Checked " + done + " of " + todo.length + " websites"; draw();
+      });
+    }
+    $("pmsg").textContent = stopFlag ? "Stopped. Results so far are below." : "Finished.";
+  } catch (e) { showErr(e.message); }
+  busy = false; $("go").disabled = false; $("stop").hidden = true; drawNow();
+  $("savedir").hidden = !window.showDirectoryPicker;
+  sessionStorage.setItem("smc_code", $("code").value);
+};
+
+/* ---------- Excel ---------- */
+$("xl").onclick = () => {
+  const base = headers.filter(h => !isWeb(h));
+  const final = [base.concat(["Website", "Website Check", "SMC Page(s)", "SMC Members Found", "SMC PDF Links", "Status"])];
+  results.forEach(r => final.push(base.map(h => r.extra[h] ?? "").concat([r.website, r.note || "",
+    r.smc_pages.map(p => p.url).join("\n"), r.members.length, r.pdfs.map(p => p.url).join("\n"), r.status])));
+  const mem = [["School", "Member name", "Designation / role", "Source page"]];
+  const pd = [["School", "PDF title", "PDF link", "Found on page"]];
+  results.forEach(r => { r.members.forEach(m => mem.push([r.name, m.name, m.role, m.page])); r.pdfs.forEach(p => pd.push([r.name, p.title, p.url, p.found_on])); });
+  const wb = XLSX.utils.book_new();
+  [["Final (all data)", final], ["SMC Members", mem], ["SMC PDFs", pd]].forEach(([n, rows]) => {
+    const ws = XLSX.utils.aoa_to_sheet(rows); ws["!cols"] = rows[0].map(() => ({ wch: 28 })); XLSX.utils.book_append_sheet(wb, ws, n);
+  });
+  XLSX.writeFile(wb, "SMC_results.xlsx");
+};
+
+/* ---------- save all PDFs (folder of your choice, or one zip) ---------- */
+async function savePdfs(useDir) {
+  const items = []; results.forEach(r => r.pdfs.forEach(p => items.push({ school: r.name, url: p.url, title: p.title })));
+  const msg = t => { $("sv").hidden = false; $("sv-msg").textContent = t; };
+  if (!items.length) { msg("There are no PDF files to save."); return; }
+  let dir = null;
+  if (useDir) { try { dir = await window.showDirectoryPicker({ mode: "readwrite" }); } catch { msg("No folder chosen - nothing was saved."); return; } }
+  const zip = dir ? null : new JSZip(), used = {}, index = [["School", "PDF title", "Original link", "Saved as / result"]];
+  let done = 0, saved = 0; stopFlag = false;
+  $("sv-bar").max = items.length; $("sv-bar").value = 0; msg("Saving PDFs ...");
+  await pool(items, 3, async it => {
+    try {
+      const r = await api("pdf", { url: it.url });
+      if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || "Error " + r.status); }
+      const buf = await r.arrayBuffer(), sch = safe(it.school);
+      let fn = safe(decodeURIComponent(it.url.split("?")[0].split("/").pop() || "file"), 80); if (!/\.pdf$/i.test(fn)) fn += ".pdf";
+      let name = fn, k = 0; while (used[sch + "/" + name]) name = (++k) + "_" + fn; used[sch + "/" + name] = 1;
+      if (dir) {
+        const sub = await dir.getDirectoryHandle(sch, { create: true });
+        const w = await (await sub.getFileHandle(name, { create: true })).createWritable(); await w.write(buf); await w.close();
+      } else zip.file(sch + "/" + name, buf);
+      index.push([it.school, it.title, it.url, sch + "/" + name]); saved++;
+    } catch (e) { index.push([it.school, it.title, it.url, "FAILED: " + e.message]); }
+    done++; $("sv-bar").value = done; msg("Saving PDFs ... " + done + " of " + items.length);
+  });
+  const csv = "\ufeff" + index.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(",")).join("\r\n");
+  if (dir) { const w = await (await dir.getFileHandle("pdf_index.csv", { create: true })).createWritable(); await w.write(csv); await w.close(); msg("Saved " + saved + " PDF(s) in the folder you chose" + (saved < items.length ? " (" + (items.length - saved) + " failed - see pdf_index.csv)." : ".")); }
+  else {
+    zip.file("pdf_index.csv", csv);
+    const a = el("a", { href: URL.createObjectURL(await zip.generateAsync({ type: "blob" })), download: "SMC_PDFs.zip" });
+    document.body.append(a); a.click(); a.remove();
+    msg("Saved " + saved + " PDF(s) in SMC_PDFs.zip (check your Downloads folder)" + (saved < items.length ? "; " + (items.length - saved) + " failed - see pdf_index.csv." : "."));
+  }
+}
+$("savedir").onclick = () => savePdfs(true);
+$("zipbtn").onclick = () => savePdfs(false);
+
+const saved = sessionStorage.getItem("smc_code"); if (saved) $("code").value = saved;
+</script>
+</main></body></html>
